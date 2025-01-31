@@ -1,5 +1,9 @@
 FROM python:3.10
 
+# Create nonroot user and group
+RUN groupadd --system nonroot && \
+    useradd --system --gid nonroot nonroot
+
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app/
@@ -39,5 +43,14 @@ COPY ./app /app/app
 # Ref: https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync
+
+# Add these before the CMD line
+RUN mkdir -p /app/uploads/company_logos \
+    /app/uploads/qms_documents \
+    /app/uploads/generated && \
+    chown -R nonroot:nonroot /app/uploads
+
+# Optional: switch to nonroot user
+USER nonroot
 
 CMD ["fastapi", "run", "--workers", "4", "app/main.py"]
