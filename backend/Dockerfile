@@ -40,4 +40,10 @@ COPY ./app /app/app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync
 
+# Add after the existing RUN commands
+RUN mkdir -p /app/uploads/company_logos /app/uploads/qms_documents /app/uploads/generated
+
+# Update permissions for upload directories
+RUN chown -R nonroot:nonroot /app/uploads
+
 CMD ["fastapi", "run", "--workers", "4", "app/main.py"]

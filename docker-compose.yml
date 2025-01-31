@@ -89,6 +89,9 @@ services:
         condition: service_completed_successfully
     env_file:
       - .env
+    volumes:
+      - ./backend:/app
+      - uploaded_files:/app/uploads
     environment:
       - DOMAIN=${DOMAIN}
       - FRONTEND_HOST=${FRONTEND_HOST?Variable not set}
@@ -107,6 +110,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER?Variable not set}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
       - SENTRY_DSN=${SENTRY_DSN}
+      - UPLOADS_DIR=/app/uploads
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/utils/health-check/"]
@@ -164,6 +168,8 @@ services:
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.middlewares=https-redirect
 volumes:
   app-db-data:
+  uploaded_files:
+    driver: local
 
 networks:
   traefik-public:
