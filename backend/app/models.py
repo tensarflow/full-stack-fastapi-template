@@ -1,7 +1,11 @@
 import uuid
-
+from datetime import datetime
+from sqlalchemy import Column, String, Integer, ForeignKey, DateTime, JSON
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+from sqlmodel import SQLModel, Field, Relationship
+from .database import Base
 from pydantic import EmailStr
-from sqlmodel import Field, Relationship, SQLModel
 
 
 # Shared properties
@@ -112,3 +116,60 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=40)
+
+
+class Company(Base):
+    __tablename__ = "companies"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String, nullable=False)
+    address = Column(String, nullable=False)
+    contact_person = Column(String, nullable=False)
+    email = Column(String, nullable=False)
+    phone = Column(String, nullable=False)
+    industry = Column(String, nullable=False)
+    registration_number = Column(String, nullable=False)
+    employees = Column(Integer, nullable=False)
+    website = Column(String)
+    logo = Column(String)
+    
+    # Relationships
+    applications = relationship("Application", back_populates="company")
+
+
+class QMSType(Base):
+    __tablename__ = "qms_types"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String, nullable=False, unique=True)
+    
+    # Relationships
+    applications = relationship("Application", back_populates="qms_type")
+    documents = relationship("Document", back_populates="qms_type")
+
+
+class Application(Base):
+    __tablename__ = "applications"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id"), nullable=False)
+    qms_type_id = Column(UUID(as_uuid=True), ForeignKey("qms_types.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    form_data = Column(JSON)
+    
+    # Relationships
+    company = relationship("Company", back_populates="applications")
+    qms_type = relationship("QMSType", back_populates="applications")
+
+
+class Document(Base):
+    __tablename__ = "documents"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String, nullable=False)
+    qms_type_id = Column(UUID(as_uuid=True), ForeignKey("qms_types.id"), nullable=False)
+    file_path = Column(String, nullable=False)
+    
+    # Relationships
+    qms_type = relationship("QMSType", back_populates="documents")
